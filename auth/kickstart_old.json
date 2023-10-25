@@ -1,0 +1,152 @@
+{
+    "variables": {
+        "apiKey": "87c688b6-df4a-4579-96da-e07188fb437a",
+        "defaultTenantId": "3c219e58-ed0e-4b18-ad48-f4f92793ae32",
+        "interfaceId": "55053a18-d1cb-4f34-8951-2d0b5d3982ab",
+        "redirectUris": ["http://localhost:3000/oauth-redirect"],
+        "logoutURL": "http://localhost:3000/logout",
+        "adminPassword": "#{ENV.FUSIONAUTH_ADMIN_PASSWORD}"
+    },
+    "apiKeys": [
+        {
+            "key": "#{apiKey}",
+            "description": "My first API Key!"
+        }
+    ],
+    "requests": [
+        {
+            "method": "POST",
+            "url": "/api/user/registration",
+            "body": {
+              "user": {
+                "email": "monica@piedpiper.com",
+                "password": "#{adminPassword}",
+                "data": {
+                  "Company": "PiedPiper"
+                }
+              },
+              "registration": {
+                "applicationId": "#{FUSIONAUTH_APPLICATION_ID}",
+                "roles": [
+                  "admin"
+                ]
+              }
+            }
+          }
+        {
+            "method": "PUT",
+            "url": "/api/tenant/" + "#{defaultTenantId}",
+            "body": {
+                "tenant": {
+                    "multiFactorConfiguration": {
+                        "loginPolicy": "required",
+                        "authenticator": {
+                            "enabled": true
+                        }
+                    },
+                    "name": "default",
+                    "passwordValidationRules": {
+                        "minLength": 10,
+                        "maxLength": 256,
+                        "requireNumber": true,
+                        "requireMixedCase": true,
+                        "requireNonAlpha": true
+                    },
+                }
+
+            }
+                
+        },
+        {
+            "method": "POST",
+            "url": "/api/application/" + "#{interfaceId}",
+            "body": {
+                "application": {
+                    "name": "User Interface",
+                    "jwtConfiguration": {
+                        "enabled": true,
+                        "algorithm": "HS256",
+                        "timeToLiveInSeconds": 3600,
+                        "refreshTokenTimeToLiveInMinutes": 43200
+                    },
+                    "oauthConfiguration": {
+                        "authorizedOriginURLs": ["http://localhost"],
+                        "authorizedRedirectURLs": "#{redirectUris}",
+                        "authorizedURLValidationPolicy": "ExactMatch",
+                        "clientAuthenticationPolicy": "Required",
+                        "clientSecret": "+fcXet9Iu2kQi61yWD9Tu4ReZ113P6yEAkr32v6WKOQ=",
+                        "enabledGrants": [
+                            "authorization_code",
+                            "refresh_token"
+                        ],
+                        "generateRefreshToken": true,
+                        "logoutBehavior": "AllApplications",
+                        "logoutURL": "#{logoutURL}",
+                        "proofKeyForCodeExchangePolicy": "NotRequired"
+                    },
+                    "registrationDeletePolicy": {
+                        "unverified": {
+                            "enabled": true,
+                            "numberOfDaysToRetain": 30
+                        }
+                    },
+                    "roles": [
+                        {
+                            "description": "Administrators that have access to everything",
+                            "id": "ce485a91-906f-4615-af75-81d37dc71e90",
+                            "name": "admin",
+                            "isDefault": false,
+                            "isSuperRole": true
+                        },
+                        {
+                            "description": "Normal users that have access to nothing",
+                            "id": "ce485a91-906f-4615-af75-81d37dc71e91",
+                            "name": "user",
+                            "isDefault": true,
+                            "isSuperRole": false
+                        }
+                    ],
+                    "registrationConfiguration": {
+                        "enabled": true,
+                        "firstName": {
+                            "enabled": true,
+                            "required": false
+                        },
+                        "middleName": {
+                            "enabled": true,
+                            "required": false
+                        },
+                        "lastName": {
+                            "enabled": true,
+                            "required": false
+                        },
+                        "mobilePhone": {
+                            "enabled": true,
+                            "required": false
+                        }
+                    }
+                }
+            }
+        }
+    ]
+},
+
+"requests": [
+    {
+        "method": "POST",
+        "url": "/api/user",
+        "headers": {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            "Authorization": "#{apiKey}"
+        },
+        "body": {
+            "user": {
+                "firstName": "admin",
+                "lastName": "admin",
+                "email": "admin@auth.com",
+                "password": "password"
+            }
+        }
+    }
+]
