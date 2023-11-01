@@ -1,0 +1,291 @@
+openapi: 3.0.0
+info:
+  title: Posts Microservice
+  version: 1.0.0
+  description: API for managing posts in a microblog application.
+servers:
+  - url: https://api.example.com/posts
+paths:
+  /posts:
+    get:
+      summary: List all posts
+      parameters:
+        - in: query
+          name: authorId
+          schema:
+            type: string
+          description: Filter posts by author UUID
+        - in: query
+          name: beforeDate
+          schema:
+            type: string
+            format: date-time
+          description: Filter posts before a certain date
+        - in: query
+          name: afterDate
+          schema:
+            type: string
+            format: date-time
+          description: Filter posts after a certain date
+        - in: query
+          name: sort
+          schema:
+            type: string
+            enum: [latest, oldest]
+          description: Sort order for the posts
+        - in: query
+          name: page
+          schema:
+            type: integer
+          description: Page number for pagination
+        - in: query
+          name: limit
+          schema:
+            type: integer
+          description: Number of posts per page for pagination
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Post"
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+    post:
+      summary: Create a new post
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PostCreate"
+      responses:
+        "201":
+          description: Post created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Post"
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+  /posts/{postId}:
+    get:
+      summary: Get a specific post by ID
+      parameters:
+        - in: path
+          name: postId
+          required: true
+          schema:
+            type: string
+          description: UUID of the post to fetch
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Post"
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "404":
+          description: Post not found
+        "500":
+          description: Internal Server Error
+    put:
+      summary: Update a specific post by ID
+      parameters:
+        - in: path
+          name: postId
+          required: true
+          schema:
+            type: string
+          description: UUID of the post to update
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PostUpdate"
+      responses:
+        "200":
+          description: Post updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Post"
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "404":
+          description: Post not found
+        "500":
+          description: Internal Server Error
+    delete:
+      summary: Delete a specific post by ID
+      parameters:
+        - in: path
+          name: postId
+          required: true
+          schema:
+            type: string
+          description: UUID of the post to delete
+      responses:
+        "204":
+          description: Post deleted
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "404":
+          description: Post not found
+        "500":
+          description: Internal Server Error
+  /posts/{postId}/comments:
+    get:
+      summary: List comments for a specific post
+      parameters:
+        - in: path
+          name: postId
+          required: true
+          schema:
+            type: string
+          description: UUID of the post
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Comment"
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "404":
+          description: Post not found
+        "500":
+          description: Internal Server Error
+  /posts/{postId}/likes:
+    get:
+      summary: List likes for a specific post
+      parameters:
+        - in: path
+          name: postId
+          required: true
+          schema:
+            type: string
+          description: UUID of the post
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Like"
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "404":
+          description: Post not found
+        "500":
+          description: Internal Server Error
+
+components:
+  schemas:
+    Post:
+      type: object
+      properties:
+        postId:
+          type: string
+          format: uuid
+        title:
+          type: string
+        content:
+          type: string
+        authorId:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        likesCount:
+          type: integer
+    PostCreate:
+      type: object
+      properties:
+        title:
+          type: string
+        content:
+          type: string
+        authorId:
+          type: string
+          format: uuid
+    PostUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+        content:
+          type: string
+    Comment:
+      type: object
+      properties:
+        commentId:
+          type: string
+          format: uuid
+        postId:
+          type: string
+          format: uuid
+        commenterId:
+          type: string
+          format: uuid
+        content:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+    Like:
+      type: object
+      properties:
+        likeId:
+          type: string
+          format: uuid
+        postId:
+          type: string
+          format: uuid
+        likerId:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+      security:
+        - JWTBearer: []
+
+securitySchemes:
+  JWTBearer:
+    type: http
+    scheme: bearer
+    bearerFormat: JWT
