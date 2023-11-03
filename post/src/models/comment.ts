@@ -1,23 +1,19 @@
-class Comment {
-    commentId: string;
-    postId: string;
+import { Schema, model } from "mongoose";
+
+export interface IComment {
+    _id: string;
     likerId: string; // Note: This refers to the user who made the comment
     content: string;
     createdAt: Date;
-
-    constructor(
-        commentId: string,
-        postId: string,
-        likerId: string,
-        content: string,
-        createdAt: Date
-    ) {
-        this.commentId = commentId;
-        this.postId = postId;
-        this.likerId = likerId;
-        this.content = content;
-        this.createdAt = createdAt;
-    }
+    updatedAt: Date;
 }
 
-export default Comment;
+const commentSchema = new Schema<IComment>(
+    {
+        likerId: { type: String, required: true },
+        content: { type: String, required: true },
+    },
+    { timestamps: true }
+);
+
+export const CommentModel = model<IComment>("Comment", commentSchema);

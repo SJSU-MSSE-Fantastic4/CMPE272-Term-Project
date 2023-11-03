@@ -1,20 +1,20 @@
-class Like {
-    likeId: string;
-    postId: string;
+import { Schema, model } from "mongoose";
+
+export interface ILike {
+    _id: string;
+    postId: string; // This refers to the user who liked the post
     likerId: string; // This refers to the user who liked the post
     createdAt: Date;
-
-    constructor(
-        likeId: string,
-        postId: string,
-        likerId: string,
-        createdAt: Date
-    ) {
-        this.likeId = likeId;
-        this.postId = postId;
-        this.likerId = likerId;
-        this.createdAt = createdAt;
-    }
+    updatedAt: Date;
 }
 
-export default Like;
+const likeSchema = new Schema<ILike>(
+    {
+        postId: { type: String, required: true },
+        likerId: { type: String, required: true },
+    },
+    { timestamps: true }
+);
+likeSchema.index({ postId: 1, likerId: 1 }, { unique: true });
+
+export const LikeModel = model<ILike>("Like", likeSchema);

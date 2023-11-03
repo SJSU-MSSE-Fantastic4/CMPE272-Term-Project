@@ -1,24 +1,32 @@
 import express, { Express, Request, Response, NextFunction } from "express";
-
-import postsRoutes from "./routes/posts";
-import commentsRoutes from "./routes/comments";
-import likesRoutes from "./routes/likes";
-import authMiddleware from "./middlewares/auth";
-
 const app: Express = express();
-
 app.use(express.json());
 
-// Middleware for authentication
-app.use(authMiddleware);
+// Connect to MongoDB
+import mongoose from "mongoose";
+mongoose
+    .connect("mongodb://root:root@localhost:27017", {
+        dbName: "postDB",
+        user: "root",
+        pass: "root",
+    })
+    .then(() => console.log("MongoDB Connected..."))
+    .catch((err) => console.log(err));
 
+// Initialize Authentication Middleware
+import keycloak from "./middlewares/auth.middleware";
+app.use(keycloak.middleware());
+
+//Initialize Route handlers
+import postsRoutes from "./routes/posts.routes";
+import userRoutes from "./routes/users.routes";
+import errorMiddleware from "./middlewares/error.middleware";
+
+app.use("/me", keycloak.protect(), userRoutes);
 app.use("/posts", postsRoutes);
-app.use("/posts/:postId/comments", commentsRoutes);
-app.use("/posts/:postId/likes", likesRoutes);
 
-app.get("/", (req: Request, res: Response) => {
-    res.send("Hello World!");
-});
+//Initialize Error Handling Middleware
+app.use(errorMiddleware);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
