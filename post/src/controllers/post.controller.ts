@@ -37,6 +37,33 @@ export const createPost: RequestHandler = async (
     }
 };
 
+export const updatePost: RequestHandler<
+    { postId: string },
+    Empty,
+    { title: string; content: string },
+    EmptyQuery,
+    Empty
+> = async (req: Request, res: Response, next: NextFunction) => {
+    const postId = req.params.postId;
+
+    const title = req.body.title;
+    const content = req.body.content;
+
+    const keycloakReq = req as KeycloakRequest;
+    const uuid = keycloakReq.kauth.grant.access_token.content.sub;
+
+    try {
+        const post = await PostModel.findOneAndUpdate(
+            { _id: postId, authorId: uuid },
+            { title: title, content: content },
+            { upsert: true, new: true }
+        );
+        res.status(200).send(post);
+    } catch (error) {
+        res.status(500).send(error);
+    }
+};
+
 export const getUsersPosts: RequestHandler = async (req, res, next) => {
     const keycloakReq = req as KeycloakRequest;
     const uuid = keycloakReq.kauth.grant.access_token.content.sub;
@@ -248,7 +275,7 @@ export const deletePost: RequestHandler<
             await PostModel.deleteOne({ _id: post._id });
         }
 
-        res.status(201).send();
+        res.status(200).send();
     } catch (error) {
         next(error);
     }

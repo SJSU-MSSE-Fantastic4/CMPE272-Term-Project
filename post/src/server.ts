@@ -2,9 +2,24 @@ import express, { Express, Request, Response, NextFunction } from "express";
 const app: Express = express();
 app.use(express.json());
 
+//Setup Logging
+var winston = require("winston"),
+    expressWinston = require("express-winston");
+
+app.use(
+    expressWinston.logger({
+        transports: [new winston.transports.Console()],
+        format: winston.format.combine(
+            winston.format.colorize(),
+            winston.format.json(),
+            winston.format.prettyPrint()
+        ),
+    })
+);
+
 // Connect to MongoDB
 import mongoose from "mongoose";
-mongoose
+export const dbConnection = mongoose
     .connect("mongodb://root:root@localhost:27017", {
         dbName: "postDB",
         user: "root",
@@ -25,12 +40,24 @@ import errorMiddleware from "./middlewares/error.middleware";
 app.use("/me", keycloak.protect(), userRoutes);
 app.use("/posts", postsRoutes);
 
+// Error Logging
+app.use(
+    expressWinston.errorLogger({
+        transports: [new winston.transports.Console()],
+        format: winston.format.combine(
+            winston.format.colorize(),
+            winston.format.json(),
+            winston.format.prettyPrint()
+        ),
+    })
+);
+
 //Initialize Error Handling Middleware
 app.use(errorMiddleware);
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-    console.log(`Server started on port ${PORT}`);
+export const server = app.listen(PORT, () => {
+    console.log("Server is running on port " + PORT);
 });
 
 export default app;
