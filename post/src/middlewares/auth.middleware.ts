@@ -2,16 +2,16 @@ import { Request, Response, NextFunction } from "express";
 import Keycloak, { KeycloakConfig } from "keycloak-connect";
 
 const keycloakConfig = {
-    clientId: "post-microservice",
+    clientId: "post-service",
     bearerOnly: true,
-    serverUrl: "http://localhost:8080",
-    realm: "microblog",
+    serverUrl: "http://localhost:8080/auth",
+    realm: "microblog-realm",
     credentials: {
-        secret: "qD8Yaa2nBvv93TtpJjmZbKgArkOEw30J",
+        secret: "rHHtKZJDb8SrfvrQktuIBC9n73qlEiLa",
     },
     "ssl-required": "none",
     "confidential-port": "0",
-    "auth-server-url": "http://localhost:8080",
+    "auth-server-url": "http://localhost:8080/auth",
     resource: "post-microservice",
 };
 
