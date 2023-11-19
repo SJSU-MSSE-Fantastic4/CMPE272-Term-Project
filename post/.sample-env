@@ -1,8 +1,0 @@
-KEYCLOAK_REALM=<your-realm>
-KEYCLOAK_SERVER_URL=<your-server-url>
-KEYCLOAK_CLIENT_ID=<your-client-id>
-KEYCLOAK_CLIENT_SECRET=<your-client-secret>
-
-ME_CONFIG_MONGODB_ADMINUSERNAME: root
-ME_CONFIG_MONGODB_ADMINPASSWORD: example
-ME_CONFIG_MONGODB_URL: mongodb://root:example@mongo:27017/
