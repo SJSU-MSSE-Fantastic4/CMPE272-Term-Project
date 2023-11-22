@@ -1,0 +1,96 @@
+# Use root/example as user/password credentials
+version: "3.1"
+
+services:
+    kong:
+        image: kong:latest
+        restart: always
+        environment:
+            KONG_DATABASE: off
+            KONG_DECLARATIVE_CONFIG: /config/kong.yml
+            KONG_PROXY_ACCESS_LOG: /dev/stdout
+            KONG_ADMIN_ACCESS_LOG: /dev/stdout
+            KONG_PROXY_ERROR_LOG: /dev/stderr
+            KONG_ADMIN_ERROR_LOG: /dev/stderr
+            KONG_ADMIN_LISTEN: "0.0.0.0:8001"
+        volumes:
+            - ./kong:/config
+        ports:
+            - "8000:8000"
+            - "8443:8443"
+            - "8001:8001"
+            - "8444:8444"
+        networks:
+            - kong-network
+
+    rabbitmq:
+        image: rabbitmq:3.9.7-management-alpine
+        restart: always
+        ports:
+            - "5672:5672"
+            - "15672:15672"
+        environment:
+            RABBITMQ_DEFAULT_USER: "guest"
+            RABBITMQ_DEFAULT_PASS: "guest"
+        networks:
+            - rabbit-network
+
+    post-mongo:
+        image: mongo
+        environment:
+            MONGO_INITDB_ROOT_USERNAME: root
+            MONGO_INITDB_ROOT_PASSWORD: password
+            MONGO_INITDB_DATABASE: postDB
+        networks:
+            - post-network
+    post-service:
+        image: sjkchang/chatwave-post-service
+        restart: always
+        depends_on:
+            - post-mongo
+            - rabbitmq
+        environment:
+            MONGO_HOST: post-mongo
+            MONGO_PORT: 27017
+            MONGO_USERNAME: root
+            MONGO_PASSWORD: password
+            MONGO_DB_NAME: postDB
+
+            AMQP_URL: amqp://rabbitmq
+
+            AUTH_SERVER_URL: "https://dev-2ttpe83i3lninaj8.us.auth0.com"
+            AUTH_CLIENT_ID: ZRU5C0kWtPWbs41hBPgFecP7I1OyBJ0z
+            AUTH_CLIENT_SECRET: 263rcqJ2sIUFwNtxJfRncGNs3aNDcE1rcbEclHn3MVALCH-3cA-_4cEynHMdNlrX
+        ports:
+            - "5000:5000"
+        networks:
+            - rabbit-network
+            - post-network
+            - kong-network
+
+    follow-service:
+        image: sjkchang/chatwave-follow-service
+        restart: always
+
+        environment:
+            NEO4J_URL: neo4j+s://f6b09929.databases.neo4j.io
+            NEO4J_USER: neo4j
+            NEO4J_PASSWORD: ytqJ0tx2OZxsllLlMFDkGMA4_Kib0tp906BXyebCPYc
+
+            AMQP_URL: amqp://rabbitmq
+
+            AUTH_SERVER_URL: "https://dev-2ttpe83i3lninaj8.us.auth0.com"
+            AUTH_CLIENT_ID: ZRU5C0kWtPWbs41hBPgFecP7I1OyBJ0z
+            AUTH_CLIENT_SECRET: 263rcqJ2sIUFwNtxJfRncGNs3aNDcE1rcbEclHn3MVALCH-3cA-_4cEynHMdNlrX
+        ports:
+            - "3000:3000"
+        networks:
+            - kong-network
+
+networks:
+    kong-network:
+        driver: bridge
+    post-network:
+        driver: bridge
+    rabbit-network:
+        driver: bridge
