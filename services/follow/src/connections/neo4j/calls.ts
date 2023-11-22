@@ -1,5 +1,6 @@
 import { Integer, Node, Record, Relationship } from "neo4j-driver";
-import { neo4jDriver } from "../server";
+import { neo4jDriver } from "../../server";
+import logger from "../../logger";
 
 interface UserProperties {
     userId: string;
@@ -33,8 +34,9 @@ export const follow = async function (followerId: string, followeeId: string) {
             )
         );
     } catch (err) {
-        console.error(err);
-        return result;
+        throw err;
+    } finally {
+        await session.close();
     }
     return result;
 };
@@ -46,6 +48,7 @@ export const unfollow = async function (
     let session = neo4jDriver.session();
     let result;
     try {
+        logger.debug(`Unfollowing ${followerId} from ${followeeId}`);
         result = await session.executeWrite((tx) =>
             tx.run<UserFollowsUser>(
                 `
@@ -53,18 +56,20 @@ export const unfollow = async function (
                 DELETE follows
                 `,
                 {
-                    follower: followerId,
-                    followee: followeeId,
+                    followerId: followerId,
+                    followeeId: followeeId,
                 }
             )
         );
+
+        return result.summary.counters.updates().relationshipsDeleted > 0
+            ? "Relationship removed"
+            : "No relationship was removed";
     } catch (err) {
-        console.error(err);
-        return result;
+        throw err;
+    } finally {
+        await session.close();
     }
-    return result.summary.counters.updates().relationshipsDeleted > 0
-        ? "Relationship removed"
-        : "No relationship was removed";
 };
 
 export const getFollowing = async function (
@@ -84,13 +89,14 @@ export const getFollowing = async function (
                 }
             )
         );
+        return result.records.map(
+            (record) => record.get("followee").properties.userId
+        );
     } catch (err) {
-        console.error(err);
-        return [];
+        throw err;
+    } finally {
+        await session.close();
     }
-    return result.records.map(
-        (record) => record.get("followee").properties.userId
-    );
 };
 
 export const getFollowers = async function (
@@ -110,11 +116,12 @@ export const getFollowers = async function (
                 }
             )
         );
+        return result.records.map(
+            (record) => record.get("follower").properties.userId
+        );
     } catch (err) {
-        console.error(err);
-        return [];
+        throw err;
+    } finally {
+        await session.close();
     }
-    return result.records.map(
-        (record) => record.get("follower").properties.userId
-    );
 };
