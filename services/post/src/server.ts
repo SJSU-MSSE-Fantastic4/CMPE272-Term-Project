@@ -1,16 +1,12 @@
 import express, { Express, Request, Response, NextFunction } from "express";
-import { startConnection } from "./rabbitmq";
-import connectToMongoDB from "./database/mongoConnection";
+import { startConnection } from "./connections/rabbitmq/rabbitmq";
+import connectToMongoDB from "./connections/database/mongoConnection";
 import { config } from "./config";
 import logger from "./logger";
+import { authMiddleware } from "./connections/auth/oidc-client";
 
 const app: Express = express();
 app.use(express.json());
-
-//Setup Keycloak
-import Keycloak from "keycloak-connect";
-export const keycloak = new Keycloak({}, config.KEYCLOAK);
-app.use(keycloak.middleware());
 
 //Setup Logging
 app.use((req: Request, res: Response, next: NextFunction) => {
@@ -19,12 +15,14 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 });
 
 //Initialize Route handlers
-import postsRoutes from "./routes/posts.routes";
-import authenticatedRoutes from "./routes/authenticated.routes";
-import { HttpException } from "./types";
+import interactionRoutes from "./routes/interactions.routes";
+import usersPostsRoutes from "./routes/usersPosts.routes";
+import { unprotectedController } from "./controllers";
 
-app.use("/me", keycloak.protect(), authenticatedRoutes);
-app.use("/posts", postsRoutes);
+app.use("/me", authMiddleware, usersPostsRoutes);
+app.use("/post", authMiddleware, interactionRoutes);
+app.get("/posts", unprotectedController.getSeveralPosts);
+app.get("/post/:postId", unprotectedController.getPostById);
 
 import { errorHandler } from "./middleware/errorHandling.middleware";
 app.use(errorHandler);
@@ -40,4 +38,5 @@ connectToMongoDB()
     })
     .catch((error) => {
         logger.error(error);
+        process.exit(1);
     });

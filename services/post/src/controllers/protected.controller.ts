@@ -1,23 +1,14 @@
 import { NextFunction, Request, Response } from "express";
-import { PostModel, IPost } from "../models/post";
 import { HttpException } from "../types";
-import { CommentModel, LikeModel } from "../models";
-import { postCreated } from "../rabbitmq";
-import { validate as uuidValidate } from "uuid";
+import { postCreated } from "../connections/rabbitmq/rabbitmq";
 import logger from "../logger";
 import { startSession } from "mongoose";
+import PostOperations from "../connections/database/operations/post";
 
-// Used to get Optional UUID from request. If not present, throws an error.
-// This function is only required to get the UUID from the express request.
-// If the keycloak middleware protected a route then the user/kauth should always
-// be present in the request.
-const getUUID = (req: Request): string => {
-    let uuid;
-    if (req.kauth) {
-        uuid = req.kauth.grant.access_token.content.sub;
-        if (!uuidValidate(uuid)) {
-            throw new HttpException(400, "Invalid UUID");
-        }
+const getUser = (req: Request): Express.User => {
+    let user;
+    if (req.user) {
+        user = req.user;
     } else {
         /* 
             500 Internal Server Error. This should never happen. 
@@ -26,7 +17,11 @@ const getUUID = (req: Request): string => {
         */
         throw new HttpException(500, "Internal Server Error");
     }
-    return uuid;
+    return user;
+};
+
+const getUserId = (req: Request): string => {
+    return getUser(req).sub;
 };
 
 export const getCurrentUsersPosts = async (
@@ -35,13 +30,10 @@ export const getCurrentUsersPosts = async (
     next: NextFunction
 ) => {
     try {
-        let uuid = getUUID(req);
+        let uuid = getUserId(req);
+        const posts = await PostOperations.getUsersPosts(uuid);
 
-        const posts = await PostModel.find({ authorId: uuid })
-            .populate("comments")
-            .populate("likes")
-            .exec();
-        res.status(201).send(posts);
+        res.status(200).send(posts);
     } catch (error) {
         next(error);
     }
@@ -54,20 +46,19 @@ export const createPost = async (
 ) => {
     const content = req.body.content;
     try {
-        let uuid = getUUID(req);
-
-        const post = new PostModel({
-            content: content,
-            authorId: uuid,
-        });
-        await post.save();
-        res.status(201).send(post);
-        logger.info(`Post successfully created with id ${post._id}`);
+        let uuid = getUserId(req);
+        let newPost = (
+            await PostOperations.createPost(uuid, content)
+        ).toObject();
+        newPost.commentsCount = 0;
+        newPost.likesCount = 0;
+        res.status(201).send(newPost);
+        logger.info(`Post ${newPost._id} created`);
 
         // We do not need to wait for the message to be published to the Message Queue. We can do it asynchronously.
         try {
-            postCreated(post._id, post.authorId);
-            logger.info(`Post ${post._id} sent to message Queue`);
+            postCreated(newPost._id, newPost.authorId);
+            logger.info(`Post ${newPost._id} sent to message Queue`);
         } catch {
             //Do Nothing
         }
@@ -83,14 +74,19 @@ export const updatePost = async (
     next: NextFunction
 ) => {
     try {
-        let currentUserId = getUUID(req);
-        const post = await PostModel.findOneAndUpdate(
-            { _id: req.params.postId, authorId: currentUserId },
-            { title: req.body.title, content: req.body.content },
-            { upsert: true, new: true }
+        const postId = req.params.postId;
+        let currentUserId = getUserId(req);
+        const post = await PostOperations.updatePost(
+            postId,
+            currentUserId,
+            req.body.content
         );
-        res.status(200).send(post);
-        logger.info(`Post successfully updated with id ${post._id}`);
+        if (post) {
+            res.status(200).send(post);
+            logger.info(`Post successfully updated with id ${post._id}`);
+        } else {
+            throw new HttpException(404, `Post with id ${postId} not found`);
+        }
     } catch (error) {
         next(error);
     }
@@ -103,15 +99,10 @@ export const deletePost = async (
 ) => {
     try {
         const postId = req.params.postId;
+        let currentUserId = getUserId(req);
 
-        let currentUserId = getUUID(req);
-
-        let result = await PostModel.findOneAndDelete({
-            _id: postId,
-            authorId: currentUserId,
-        });
-
-        if (result) {
+        let deleteResult = await PostOperations.deletePost(postId);
+        if (deleteResult.deletedCount > 0) {
             res.status(200).send();
             logger.info(`Post successfully deleted with id ${postId}`);
         } else {
@@ -127,42 +118,22 @@ export const likePost = async (
     res: Response,
     next: NextFunction
 ) => {
-    // Using Session to ensure atomicity of the transaction
-    const session = await startSession();
-    session.startTransaction();
-
     try {
-        let uuid = getUUID(req);
+        let uuid = getUserId(req);
         const postId = req.params.postId;
 
-        let post = await PostModel.findById(postId);
-        if (!post) {
-            throw new HttpException(404, `Post with id ${postId} not found`);
+        let like = await PostOperations.likePost(postId, uuid);
+        if (like) {
+            res.status(204).send();
+            logger.info(`Post ${postId} liked by user ${uuid}`);
+        } else {
+            throw new HttpException(
+                500,
+                `An internal error occured when liking post ${postId}`
+            );
         }
-
-        let like = await LikeModel.findOneAndUpdate(
-            {
-                likerId: uuid,
-                postId: postId,
-            },
-            {
-                likerId: uuid,
-                postId: postId,
-            },
-            { upsert: true, new: true }
-        );
-
-        await PostModel.findByIdAndUpdate(postId, {
-            $addToSet: { likes: like._id },
-        });
-
-        res.status(204).send();
-        logger.info(`Post ${post._id} sucessfully liked by user ${uuid}`);
     } catch (error) {
-        await session.abortTransaction();
         next(error);
-    } finally {
-        session.endSession();
     }
 };
 
@@ -177,26 +148,18 @@ export const unlikePost = async (
 
     try {
         const postId = req.params.postId;
-        let uuid = getUUID(req);
+        let uuid = getUserId(req);
 
-        let post = await PostModel.findById(postId);
-        if (!post) {
-            throw new HttpException(404, `Post with id ${postId} not found`);
-        }
-
-        let like = await LikeModel.findOneAndDelete({
-            likerId: uuid,
-            postId: postId,
-        });
-
+        let like = await PostOperations.unlikePost(postId, uuid);
         if (like) {
-            await PostModel.findByIdAndUpdate(postId, {
-                $pull: { likes: like._id },
-            });
+            res.status(204).send();
+            logger.info(`Post ${postId} unliked by user ${uuid}`);
+        } else {
+            throw new HttpException(
+                404,
+                `Post with id ${postId} is not currently liked by user ${uuid}`
+            );
         }
-
-        res.status(204).send();
-        logger.info(`Post ${post._id} sucessfully unliked by user ${uuid}`);
     } catch (error) {
         await session.abortTransaction();
         next(error);
@@ -211,31 +174,76 @@ export const createComment = async (
     next: NextFunction
 ) => {
     // Using Session to ensure atomicity of the transaction
-    const session = await startSession();
-    session.startTransaction();
+
     try {
         const postId = req.params.postId;
-        let currentUserId = getUUID(req);
+        let currentUserId = getUserId(req);
 
-        let post = await PostModel.findById(postId);
+        let response = await PostOperations.createComment(
+            postId,
+            currentUserId,
+            req.body.content
+        );
+
+        let [post, comment] = response;
         if (!post) {
             throw new HttpException(404, `Post with id ${postId} not found`);
         }
 
-        let comment = new CommentModel({
-            commenterId: currentUserId,
-            content: req.body.content,
-        });
-
-        post.comments.push(comment);
-        await comment.save();
-        await post.save();
-
         res.status(201).send(comment);
+        logger.info(
+            `User ${currentUserId} created comment ${comment._id} on post ${postId}`
+        );
     } catch (error) {
-        await session.abortTransaction();
         next(error);
-    } finally {
-        session.endSession();
+    }
+};
+
+export const deleteComment = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    try {
+        const commentId = req.params.commentId;
+        const postId = req.params.postId;
+
+        let currentUserId = getUserId(req);
+
+        let [comment, isAuthor] = await PostOperations.isCommentAuthor(
+            commentId,
+            currentUserId
+        );
+        if (isAuthor) {
+            let deleteResult = await PostOperations.deleteComment(
+                postId,
+                commentId
+            );
+            if (deleteResult) {
+                res.status(200).send();
+                logger.info(
+                    `Comment ${commentId} deleted by user ${currentUserId}`
+                );
+            } else {
+                throw new HttpException(
+                    404,
+                    `Comment with id ${commentId} not found`
+                );
+            }
+        } else {
+            if (comment) {
+                throw new HttpException(
+                    403,
+                    `User ${currentUserId} is not the author of comment ${commentId}`
+                );
+            } else {
+                throw new HttpException(
+                    404,
+                    `Comment ${commentId} does not exist`
+                );
+            }
+        }
+    } catch (error) {
+        next(error);
     }
 };

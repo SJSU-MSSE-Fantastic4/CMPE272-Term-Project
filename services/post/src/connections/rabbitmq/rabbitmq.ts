@@ -1,7 +1,6 @@
 import { connect, Connection, Channel, ConsumeMessage } from "amqplib";
-import { IFeed, IPost, IComment, ILike } from "./models";
-import { config } from "./config";
-import logger from "./logger";
+import { config } from "../../config";
+import logger from "../../logger";
 
 interface PostEvent {
     postId: string;

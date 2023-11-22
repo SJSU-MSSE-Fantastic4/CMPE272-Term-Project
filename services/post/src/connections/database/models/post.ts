@@ -13,27 +13,38 @@ export interface IPost {
     likes: ILike[];
     createdAt: Date;
     updatedAt: Date;
+    commentsCount?: number;
+    likesCount?: number;
 }
 
 const postSchema = new Schema<IPost>(
     {
-        content: { type: String, required: true },
+        //Validate content is 1-280 characters
+        content: {
+            type: String,
+            required: true,
+            maxlength: 280,
+        },
+        // Users auth0 id
         authorId: {
             type: String,
             required: true,
-            validate: {
-                validator: function (v: string) {
-                    return UUID_REGEXP.test(v);
-                },
-                message: (props: any) => `${props.value} is not a valid UUID!`,
-            },
-        }, // Should be a UUID
+        },
         comments: [
             { type: Schema.Types.ObjectId, ref: "Comment", default: [] },
         ],
         likes: [{ type: Schema.Types.ObjectId, ref: "Like", default: [] }],
     },
     { timestamps: true }
+);
+
+postSchema.post(
+    "deleteOne",
+    { document: true, query: false },
+    async function (doc, next) {
+        await CommentModel.deleteMany({ _id: { $in: doc.comments } });
+        await LikeModel.deleteMany({ _id: { $in: doc.likes } });
+    }
 );
 
 export const PostModel = model<IPost>("Post", postSchema);
