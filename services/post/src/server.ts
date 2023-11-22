@@ -19,6 +19,10 @@ import interactionRoutes from "./routes/interactions.routes";
 import usersPostsRoutes from "./routes/usersPosts.routes";
 import { unprotectedController } from "./controllers";
 
+app.get("/", (req: Request, res: Response) => {
+    res.send("Post Service is up and running");
+});
+
 app.use("/me", authMiddleware, usersPostsRoutes);
 app.use("/post", authMiddleware, interactionRoutes);
 app.get("/posts", unprotectedController.getSeveralPosts);

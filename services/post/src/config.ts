@@ -11,8 +11,10 @@ const MONGO_DB_NAME = process.env.MONGO_DB_NAME || "postDB";
 const AUTH_SERVER_URL =
     process.env.AUTH_SERVER_URL || "https://dev-2ttpe83i3lninaj8.us.auth0.com";
 const AUTH_CLIENT_SECRET =
-    process.env.AUTH_CLIENT_SECRET || "rHHtKZJDb8SrfvrQktuIBC9n73qlEiLa";
-const AUTH_CLIENT_ID = process.env.KEYCLOAK_CLIENT_ID || "chatwave-interface";
+    process.env.AUTH_CLIENT_SECRET ||
+    "263rcqJ2sIUFwNtxJfRncGNs3aNDcE1rcbEclHn3MVALCH-3cA-_4cEynHMdNlrX";
+const AUTH_CLIENT_ID =
+    process.env.KEYCLOAK_CLIENT_ID || "ZRU5C0kWtPWbs41hBPgFecP7I1OyBJ0z";
 
 const AMQP_URL = process.env.AMQP_URL || "amqp://localhost";
 
