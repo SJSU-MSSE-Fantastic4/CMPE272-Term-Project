@@ -4,6 +4,8 @@ import {
     unfollow,
     getFollowers,
     getFollowing,
+    addMeToDB,
+    searchUsers,
 } from "./connections/neo4j/calls";
 import logger from "./logger";
 import { HttpException } from "./types";
@@ -28,6 +30,43 @@ const getUser = (req: Request): Express.User => {
 
 const getUserId = (req: Request): string => {
     return getUser(req).sub;
+};
+
+export const addMeToDBController = async function (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) {
+    try {
+        let me = getUser(req);
+        let result = await addMeToDB(me);
+
+        if (!result) {
+            throw new HttpException(500, "Internal Server Error");
+        }
+
+        logger.info(`User ${me.sub} added to database`);
+        res.status(200).send(result);
+    } catch (err) {
+        next(err);
+    }
+};
+
+export const searchController = async function (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) {
+    try {
+        let searchTerm = req.params.searchTerm;
+        let result = await searchUsers(searchTerm);
+        logger.info(`Searching for ${searchTerm}`);
+        res.status(200).send({
+            users: result,
+        });
+    } catch (err) {
+        next(err);
+    }
 };
 
 export const followController = async function (

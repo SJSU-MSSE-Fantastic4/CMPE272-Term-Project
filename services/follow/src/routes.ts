@@ -8,10 +8,15 @@ import {
     getFollowingController,
     getCurrentUserFollowersController,
     getCurrentUserFollowingController,
+    addMeToDBController,
+    searchController,
 } from "./controllers";
 
 const router = express.Router();
 
+router.get("/search/:searchTerm", searchController);
+
+router.post("/me", authMiddleware, addMeToDBController);
 router.post("/me/follow/:followeeId", authMiddleware, followController);
 router.delete("/me/follow/:followeeId", authMiddleware, unfollowController);
 
