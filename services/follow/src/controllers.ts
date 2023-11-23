@@ -7,6 +7,7 @@ import {
 } from "./connections/neo4j/calls";
 import logger from "./logger";
 import { HttpException } from "./types";
+import { json } from "stream/consumers";
 
 const getUser = (req: Request): Express.User => {
     let user;
@@ -36,9 +37,9 @@ export const followController = async function (
 ) {
     try {
         let currentUserId = getUserId(req);
-        let result = await follow(currentUserId, req.params.followeeId);
+        await follow(currentUserId, req.params.followeeId);
         logger.info(`User ${currentUserId} followed ${req.params.followeeId}`);
-        res.status(200).send(result);
+        res.status(204).send();
     } catch (err) {
         next(err);
     }
@@ -51,11 +52,11 @@ export const unfollowController = async function (
 ) {
     try {
         let currentUserId = getUserId(req);
-        let result = await unfollow(currentUserId, req.params.followeeId);
+        await unfollow(currentUserId, req.params.followeeId);
         logger.info(
             `User ${currentUserId} unfollowed ${req.params.followeeId}`
         );
-        res.status(200).send(result);
+        res.status(200).send();
     } catch (err) {
         next(err);
     }
@@ -70,7 +71,9 @@ export const getCurrentUserFollowersController = async function (
         let currentUserId = getUserId(req);
         logger.info(`Getting followers of ${currentUserId}`);
         let result = await getFollowers(currentUserId);
-        res.status(200).send({ result });
+        res.status(200).send({
+            followers: result,
+        });
     } catch (err) {
         next(err);
     }
@@ -85,7 +88,9 @@ export const getCurrentUserFollowingController = async function (
         let currentUserId = getUserId(req);
         logger.info(`Getting following for ${currentUserId}`);
         let result = await getFollowing(currentUserId);
-        res.status(200).send(result); //Can't send just a Number; encapsulate with {} or convert to String.
+        res.status(200).send({
+            following: result,
+        });
     } catch (err) {
         next(err);
     }
@@ -100,7 +105,9 @@ export const getFollowersController = async function (
         //Passing in "name" parameter in body of POST request
         let result = await getFollowers(req.params.userId);
         logger.info(`Getting following for ${req.params.userId}`);
-        res.status(200).send({ result });
+        res.status(200).send({
+            followers: result,
+        });
     } catch (err) {
         next(err);
     }
@@ -115,7 +122,9 @@ export const getFollowingController = async function (
         //Passing in "name" parameter in body of POST request
         let result = await getFollowing(req.params.userId);
         logger.info(`Getting followers for ${req.params.userId}`);
-        res.status(200).send(result); //Can't send just a Number; encapsulate with {} or convert to String.
+        res.status(200).send({
+            following: result,
+        });
     } catch (err) {
         next(err);
     }

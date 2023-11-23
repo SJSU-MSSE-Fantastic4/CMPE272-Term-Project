@@ -16,10 +16,10 @@ interface UserFollowsUser {
 
 export const follow = async function (followerId: string, followeeId: string) {
     let session = neo4jDriver.session();
+    logger.info("Opening session");
 
-    let result;
     try {
-        result = await session.executeWrite((tx) =>
+        let result = await session.executeWrite((tx) =>
             tx.run<UserFollowsUser>(
                 `
                 MERGE (follower:User {userId: $follower})
@@ -33,12 +33,13 @@ export const follow = async function (followerId: string, followeeId: string) {
                 }
             )
         );
+        return result;
     } catch (err) {
         throw err;
     } finally {
+        logger.info("Closing session");
         await session.close();
     }
-    return result;
 };
 
 export const unfollow = async function (
@@ -99,9 +100,7 @@ export const getFollowing = async function (
     }
 };
 
-export const getFollowers = async function (
-    userId: string
-): Promise<Array<string>> {
+export const getFollowers = async function (userId: string) {
     let session = neo4jDriver.session();
     let result;
     try {
