@@ -1,0 +1,378 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/": {
+      "get": {
+        "operationId": "AppController_getHello",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/users/me": {
+      "put": {
+        "operationId": "UsersController_create",
+        "summary": "Creates/Updates the current user based on their auth0 profile",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The Created User",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/users/search": {
+      "get": {
+        "operationId": "UsersController_search",
+        "summary": "Finds users matching the search term",
+        "parameters": [
+          {
+            "name": "search",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A list of users matching the search term",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/User"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users": {
+      "get": {
+        "operationId": "UsersController_findAll",
+        "summary": "Finds users from a comma separated list of ids",
+        "parameters": [
+          {
+            "name": "ids",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A list of users with the given ids",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/User"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/{id}": {
+      "get": {
+        "operationId": "UsersController_findOne",
+        "summary": "Gets a user by id",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A users with the given id",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/me/follow/{followeeId}": {
+      "post": {
+        "operationId": "UsersController_follow",
+        "summary": "Adds a follower -> followee relationship between the currentUser and the user with followeeId",
+        "parameters": [
+          {
+            "name": "followeeId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "UsersController_unfollow",
+        "summary": "Removes a follower -> followee relationship between the currentUser and the user with followeeId",
+        "parameters": [
+          {
+            "name": "followeeId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/users/me/followers": {
+      "get": {
+        "operationId": "UsersController_currentUserfollowers",
+        "summary": "Gets a list of the current users followers",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "A list of users following the current user",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/User"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/users/me/following": {
+      "get": {
+        "operationId": "UsersController_currentUserfollowing",
+        "summary": "Gets a list of the users the current user follows",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "A list of users  the current user is following",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/User"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/users/{userId}/followers": {
+      "get": {
+        "operationId": "UsersController_followers",
+        "summary": "Gets a list of the users the user with userId follows",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A list of users  the user with userId is following",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/User"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/{userId}/following": {
+      "get": {
+        "operationId": "UsersController_following",
+        "summary": "Gets a list of the users the user with userId follows",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A list of users the user with userId is following",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/User"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "info": {
+    "title": "Follow Service API",
+    "description": "The follow service API description",
+    "version": "1.0",
+    "contact": {}
+  },
+  "tags": [
+    {
+      "name": "follow",
+      "description": ""
+    }
+  ],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "bearer": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http"
+      }
+    },
+    "schemas": {
+      "User": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "example": "auth0|5f3c2c3a5e6e5d0069e9e5e0",
+            "description": "The unique identifier of the user"
+          },
+          "email": {
+            "type": "string",
+            "example": "example@gmail.com",
+            "description": "The user's email address"
+          },
+          "name": {
+            "type": "string",
+            "example": "testuser",
+            "description": "The unique name of the User"
+          },
+          "picture": {
+            "type": "string",
+            "example": "https://s.gravatar.com/avatar/5dd4e620ff09450cd4866d8726da24b3?s=480&r=pg&d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2Fja.png",
+            "description": "A link to the users profile image"
+          },
+          "nickname": {
+            "type": "string",
+            "example": "testuser",
+            "description": "The non-unique name of the User"
+          },
+          "created_at": {
+            "type": "string",
+            "example": "2023-11-24T22:04:07.664Z",
+            "description": "The date the user was created in auth0"
+          },
+          "updated_at": {
+            "type": "string",
+            "example": "2023-11-24T22:04:07.664Z",
+            "description": "The date the user was last updated in auth0"
+          },
+          "role": {
+            "type": "string",
+            "examples": [
+              "user",
+              "admin"
+            ],
+            "description": "The users role"
+          }
+        },
+        "required": [
+          "userId",
+          "email",
+          "name",
+          "picture",
+          "nickname",
+          "created_at",
+          "updated_at",
+          "role"
+        ]
+      }
+    }
+  }
+}
