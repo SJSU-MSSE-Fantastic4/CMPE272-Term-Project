@@ -2,24 +2,22 @@
 
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { BaseClient, Issuer, TokenSet } from 'openid-client';
-
-const AUTH_SERVER_URL =
-  process.env.AUTH_SERVER_URL || 'https://dev-2ttpe83i3lninaj8.us.auth0.com';
-const AUTH_CLIENT_ID =
-  process.env.AUTH_CLIENT_ID || 'ZRU5C0kWtPWbs41hBPgFecP7I1OyBJ0z';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthService {
   private client: BaseClient;
+  private AUTH_SERVER_URL = this.configService.get<string>('auth.serverUrl');
+  private AUTH_CLIENT_ID = this.configService.get<string>('auth.clientId');
 
-  constructor() {
+  constructor(private configService: ConfigService) {
     this.setupClient();
   }
 
   async setupClient() {
-    this.client = await Issuer.discover(AUTH_SERVER_URL).then((issuer) => {
+    this.client = await Issuer.discover(this.AUTH_SERVER_URL).then((issuer) => {
       return new issuer.Client({
-        client_id: AUTH_CLIENT_ID,
+        client_id: this.AUTH_CLIENT_ID,
       });
     });
   }

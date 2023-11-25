@@ -7,6 +7,6 @@ async function bootstrap() {
   const logger = new Logger('RabbitMQBootstrap');
   const app = await NestFactory.create(AppModule);
 
-  await app.listen(3001);
+  await app.listen(3000);
 }
 bootstrap();

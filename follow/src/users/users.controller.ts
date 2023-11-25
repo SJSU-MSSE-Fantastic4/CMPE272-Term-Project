@@ -25,7 +25,7 @@ import {
 } from '@nestjs/swagger';
 import { User } from './entities/user.entity';
 
-@Controller('users')
+@Controller('')
 export class UsersController {
   private readonly logger = new Logger(UsersController.name);
   constructor(private readonly usersService: UsersService) {}

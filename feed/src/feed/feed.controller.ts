@@ -1,7 +1,7 @@
 import { Controller, Get, Param } from '@nestjs/common';
 import { FeedService } from './feed.service';
 
-@Controller('feed')
+@Controller('')
 export class FeedController {
   constructor(private readonly feedService: FeedService) {}
 

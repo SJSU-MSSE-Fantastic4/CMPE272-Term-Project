@@ -2,6 +2,7 @@ import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { connect, Connection, Channel, ConsumeMessage } from 'amqplib';
 import * as amqp from 'amqplib';
 import { Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 
 interface PostEvent {
   postId: string;
@@ -10,11 +11,13 @@ interface PostEvent {
 
 @Injectable()
 export class RabbitMQService implements OnModuleInit, OnModuleDestroy {
-  private readonly url = process.env.AMQP_URL || 'amqp://localhost';
+  private readonly url = this.configService.get<string>('amqp.url');
 
   private connection: Connection;
   private channel: Channel;
   private readonly logger = new Logger(RabbitMQService.name);
+
+  constructor(private configService: ConfigService) {}
 
   async onModuleInit(): Promise<void> {
     try {

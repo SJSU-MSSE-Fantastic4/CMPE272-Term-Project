@@ -21,7 +21,7 @@ import { ObjectIdPipe } from '../database/object-id.pipe';
 import { HttpCode } from '@nestjs/common';
 import { RabbitMQService } from 'src/rabbitmq/rabbitmq.service';
 
-@Controller('posts')
+@Controller('')
 export class PostsController {
   constructor(
     private readonly postService: PostsService,
