@@ -41,8 +41,6 @@ services:
         depends_on:
             - post-mongo
             - rabbitmq
-        ports:
-            - "3000:3000"
         environment:
             MONGO_URL: mongodb://post-mongo
             MONGO_USERNAME: root
@@ -63,8 +61,6 @@ services:
         restart: always
         depends_on:
             - rabbitmq
-        ports:
-            - "3001:3000"
         environment:
             AUTH_SERVER_URL: "https://dev-2ttpe83i3lninaj8.us.auth0.com"
             AUTH_CLIENT_ID: ZRU5C0kWtPWbs41hBPgFecP7I1OyBJ0z
@@ -89,8 +85,6 @@ services:
         restart: always
         depends_on:
             - rabbitmq
-        ports:
-            - "3002:3000"
         environment:
             AUTH_SERVER_URL: "https://dev-2ttpe83i3lninaj8.us.auth0.com"
             AUTH_CLIENT_ID: ZRU5C0kWtPWbs41hBPgFecP7I1OyBJ0z

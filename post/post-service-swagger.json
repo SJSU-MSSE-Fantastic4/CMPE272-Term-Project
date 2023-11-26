@@ -1,0 +1,485 @@
+{
+    "openapi": "3.0.0",
+    "paths": {
+        "/post/{postId}": {
+            "get": {
+                "operationId": "PostsController_getPostById",
+                "summary": "Gets a post by its ID",
+                "parameters": [
+                    {
+                        "name": "postId",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The post with the given ID",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PopulatedPost"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/posts": {
+            "get": {
+                "operationId": "PostsController_getPostsByIds",
+                "summary": "Gets a list of post by a comma separated list of IDs",
+                "parameters": [
+                    {
+                        "name": "ids",
+                        "required": true,
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A list of posts with the given IDs",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/UnpopulatedPost"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/me/posts": {
+            "get": {
+                "operationId": "PostsController_getUsersPosts",
+                "summary": "Gets a list of post created by the authenticated user",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "A list of posts with the given IDs",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/UnpopulatedPost"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ]
+            }
+        },
+        "/me/post": {
+            "post": {
+                "operationId": "PostsController_createPost",
+                "summary": "Creates a post with the given content",
+                "parameters": [],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ContentDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The created Post",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PopulatedPost"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ]
+            }
+        },
+        "/me/post/{postId}": {
+            "patch": {
+                "operationId": "PostsController_updatePost",
+                "summary": "Updates a post with the id of :postId with the given content",
+                "parameters": [
+                    {
+                        "name": "postId",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ContentDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The created Post",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PopulatedPost"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ]
+            },
+            "delete": {
+                "operationId": "PostsController_deletePost",
+                "summary": "Deletes a post with the id of :postId",
+                "parameters": [
+                    {
+                        "name": "postId",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ]
+            }
+        },
+        "/post/{postId}/like": {
+            "post": {
+                "operationId": "PostsController_likePost",
+                "summary": "Adds a like to a post with the id of :postId",
+                "parameters": [
+                    {
+                        "name": "postId",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ]
+            },
+            "delete": {
+                "operationId": "PostsController_unlikePost",
+                "summary": "Removes a like to a post with the id of :postId",
+                "parameters": [
+                    {
+                        "name": "postId",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ]
+            }
+        },
+        "/post/{postId}/comment": {
+            "post": {
+                "operationId": "PostsController_createComment",
+                "summary": "Adds a comment with the given content to a post with the id of :postId",
+                "parameters": [
+                    {
+                        "name": "postId",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ContentDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The created comment",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Comment"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ]
+            }
+        },
+        "/post/{postId}/comment/{commentId}": {
+            "delete": {
+                "operationId": "PostsController_deleteComment",
+                "summary": "Removes a comment from the post with the id of :postId",
+                "parameters": [
+                    {
+                        "name": "postId",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "commentId",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ]
+            }
+        }
+    },
+    "info": {
+        "title": "Post Service API",
+        "description": "The post service API description",
+        "version": "1.0",
+        "contact": {}
+    },
+    "tags": [
+        {
+            "name": "post",
+            "description": ""
+        }
+    ],
+    "servers": [],
+    "components": {
+        "securitySchemes": {
+            "bearer": {
+                "scheme": "bearer",
+                "bearerFormat": "JWT",
+                "type": "http"
+            }
+        },
+        "schemas": {
+            "PopulatedPost": {
+                "type": "object",
+                "properties": {
+                    "_id": {
+                        "type": "string",
+                        "example": "6561c10fd5d828913a58ba2f",
+                        "description": "The unique identifier of the post"
+                    },
+                    "content": {
+                        "type": "string",
+                        "example": "This is a posts, it is a very good post",
+                        "description": "The content/tweet of the post"
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "example": "2023-11-24T22:04:07.664Z",
+                        "description": "The date the user was created in auth0"
+                    },
+                    "updatedAt": {
+                        "type": "string",
+                        "example": "2023-11-24T22:04:07.664Z",
+                        "description": "The date the user was last updated in auth0"
+                    },
+                    "likes": {
+                        "example": "[\n        { _id: \"123\", \n            _id: \"6563abcfa59f9af017cbbe39\n            likerId: \"auth0|655ae7e187cb3003c86f0f41\", \n            postId: \"6561c10fd5d828913a58ba2f\", \n            createdAt: \"2020-11-24T22:04:07.664Z\", \n            updatedAt: \"2020-11-24T22:04:07.664Z\" \n        }\n    ]",
+                        "description": "A list of all the likes on the post",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "comments": {
+                        "example": "[\n        { _id: \"123\", \n            commenterId: \"auth0|655ae7e187cb3003c86f0f41\", \n            content: \"This is a comment\", \n            createdAt: \"2020-11-24T22:04:07.664Z\", \n            updatedAt: \"2020-11-24T22:04:07.664Z\" \n        }\n    ]",
+                        "description": "A list of all the comments on the post",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "required": [
+                    "_id",
+                    "content",
+                    "createdAt",
+                    "updatedAt",
+                    "likes",
+                    "comments"
+                ]
+            },
+            "UnpopulatedPost": {
+                "type": "object",
+                "properties": {
+                    "_id": {
+                        "type": "string",
+                        "example": "6561c10fd5d828913a58ba2f",
+                        "description": "The unique identifier of the post"
+                    },
+                    "content": {
+                        "type": "string",
+                        "example": "This is a posts, it is a very good post",
+                        "description": "The content/tweet of the post"
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "example": "2023-11-24T22:04:07.664Z",
+                        "description": "The date the user was created in auth0"
+                    },
+                    "updatedAt": {
+                        "type": "string",
+                        "example": "2023-11-24T22:04:07.664Z",
+                        "description": "The date the user was last updated in auth0"
+                    },
+                    "likesCount": {
+                        "type": "number",
+                        "example": "120",
+                        "description": "The number of likes on the post"
+                    },
+                    "commentsCount": {
+                        "type": "number",
+                        "example": "10",
+                        "description": "The number of comments on the post"
+                    }
+                },
+                "required": [
+                    "_id",
+                    "content",
+                    "createdAt",
+                    "updatedAt",
+                    "likesCount",
+                    "commentsCount"
+                ]
+            },
+            "ContentDto": {
+                "type": "object",
+                "properties": {
+                    "content": {
+                        "type": "string",
+                        "example": "This is a post and or comment, it is a very good post and or comment",
+                        "description": "The content of a post or comment"
+                    }
+                },
+                "required": ["content"]
+            },
+            "Comment": {
+                "type": "object",
+                "properties": {
+                    "_id": {
+                        "type": "string",
+                        "example": "6561c10fd5d828913a58ba2f",
+                        "description": "The unique identifier of the like"
+                    },
+                    "commenterId": {
+                        "type": "string",
+                        "example": "auth0|655ae7e187cb3003c86f0f41",
+                        "description": "The unique identifier of the user who liked the post"
+                    },
+                    "content": {
+                        "type": "string",
+                        "example": "This is a comment, it is a very good comment",
+                        "description": "The content of the comment"
+                    },
+                    "createdAt": {
+                        "format": "date-time",
+                        "type": "string",
+                        "example": "2023-11-24T22:04:07.664Z",
+                        "description": "The date the comment was created"
+                    },
+                    "updatedAt": {
+                        "format": "date-time",
+                        "type": "string",
+                        "example": "6561c10fd5d828913a58ba2f",
+                        "description": "The date the comment was last updated"
+                    }
+                },
+                "required": [
+                    "_id",
+                    "commenterId",
+                    "content",
+                    "createdAt",
+                    "updatedAt"
+                ]
+            }
+        }
+    }
+}
