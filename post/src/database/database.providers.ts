@@ -1,7 +1,7 @@
 import * as mongoose from 'mongoose';
 
 const MONGO_URL = process.env.MONGO_URL || 'mongodb://localhost:27017';
-const MONGO_DB_NAME = process.env.MONGO_DB_NAME || 'postDb';
+const MONGO_DB_NAME = process.env.MONGO_DB_NAME || 'postDB';
 const MONGO_USER = process.env.MONGO_USER || 'root';
 const MONGO_PASSWORD = process.env.MONGO_PASSWORD || 'password';
 

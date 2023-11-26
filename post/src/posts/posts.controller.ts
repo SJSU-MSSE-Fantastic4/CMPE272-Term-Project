@@ -4,6 +4,7 @@ import {
   Controller,
   Delete,
   Get,
+  HttpStatus,
   NotFoundException,
   Param,
   Patch,
@@ -12,14 +13,16 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
-import { AuthGuard } from 'src/auth/auth.guard';
-import { ApiBearerAuth } from '@nestjs/swagger';
 import { AuthUser } from 'src/auth/entities/authUser.entity';
-import { CurrentUser } from 'src/auth/current-user.decorator';
-import mongoose from 'mongoose';
+import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import { ObjectIdPipe } from '../database/object-id.pipe';
 import { HttpCode } from '@nestjs/common';
 import { RabbitMQService } from 'src/rabbitmq/rabbitmq.service';
+import { ContentDto } from './dto/content.dto';
+import { Auth } from 'src/auth/decorators/auth.decorator';
+import { ApiOkResponse, ApiOperation } from '@nestjs/swagger';
+import { PopulatedPost, UnpopulatedPost } from './entities/post.entity';
+import { Comment } from './entities/comment.entity';
 
 @Controller('')
 export class PostsController {
@@ -29,6 +32,14 @@ export class PostsController {
   ) {}
 
   @Get('post/:postId')
+  @ApiOperation({
+    summary: 'Gets a post by its ID',
+  })
+  @ApiOkResponse({
+    status: HttpStatus.OK,
+    description: 'The post with the given ID',
+    type: PopulatedPost,
+  })
   async getPostById(@Param('postId', ObjectIdPipe) postId: string) {
     const post = await this.postService.getPostById(postId);
     if (!post) throw new NotFoundException(`Post with ID ${postId} not found`);
@@ -36,6 +47,14 @@ export class PostsController {
   }
 
   @Get('posts')
+  @ApiOperation({
+    summary: 'Gets a list of post by a comma separated list of IDs',
+  })
+  @ApiOkResponse({
+    status: HttpStatus.OK,
+    description: 'A list of posts with the given IDs',
+    type: [UnpopulatedPost],
+  })
   async getPostsByIds(@Query('ids') ids: string) {
     if (!ids) throw new BadRequestException('No post IDs provided');
     let postIds = ids.split(',').map((item) => item.trim());
@@ -46,8 +65,15 @@ export class PostsController {
   }
 
   @Get('me/posts')
-  @UseGuards(AuthGuard)
-  @ApiBearerAuth()
+  @Auth()
+  @ApiOperation({
+    summary: 'Gets a list of post created by the authenticated user',
+  })
+  @ApiOkResponse({
+    status: HttpStatus.OK,
+    description: 'A list of posts with the given IDs',
+    type: [UnpopulatedPost],
+  })
   async getUsersPosts(@CurrentUser() user: AuthUser) {
     const posts = await this.postService.getUsersPosts(user.sub);
     if (!posts)
@@ -56,21 +82,35 @@ export class PostsController {
   }
 
   @Post('me/post')
-  @UseGuards(AuthGuard)
-  @ApiBearerAuth()
-  async createPost(@CurrentUser() user: AuthUser, @Body() body: any) {
+  @Auth()
+  @ApiOperation({
+    summary: 'Creates a post with the given content',
+  })
+  @ApiOkResponse({
+    status: HttpStatus.OK,
+    description: 'The created Post',
+    type: PopulatedPost,
+  })
+  async createPost(@CurrentUser() user: AuthUser, @Body() body: ContentDto) {
     const post = await this.postService.createPost(user.sub, body.content);
     this.rabbitMQService.postCreated(post._id, user.sub);
     return post;
   }
 
   @Patch('me/post/:postId')
-  @UseGuards(AuthGuard)
-  @ApiBearerAuth()
+  @Auth()
+  @ApiOperation({
+    summary: 'Updates a post with the id of :postId with the given content',
+  })
+  @ApiOkResponse({
+    status: HttpStatus.OK,
+    description: 'The created Post',
+    type: PopulatedPost,
+  })
   async updatePost(
     @CurrentUser() user: AuthUser,
     @Param('postId', ObjectIdPipe) postId: string,
-    @Body() body: any,
+    @Body() body: ContentDto,
   ) {
     const post = await this.postService.updatePost(
       postId,
@@ -81,13 +121,17 @@ export class PostsController {
   }
 
   @Delete('me/post/:postId')
-  @UseGuards(AuthGuard)
-  @ApiBearerAuth()
+  @Auth()
   @HttpCode(204)
+  @ApiOperation({
+    summary: 'Deletes a post with the id of :postId',
+  })
+  @ApiOkResponse({
+    status: HttpStatus.NO_CONTENT,
+  })
   async deletePost(
     @CurrentUser() user: AuthUser,
     @Param('postId', ObjectIdPipe) postId: string,
-    @Body() body: any,
   ) {
     const result = await this.postService.deletePost(postId, user.sub);
     if (result.deletedCount === 0)
@@ -97,9 +141,14 @@ export class PostsController {
   }
 
   @Post('post/:postId/like')
-  @UseGuards(AuthGuard)
-  @ApiBearerAuth()
+  @Auth()
   @HttpCode(204)
+  @ApiOperation({
+    summary: 'Adds a like to a post with the id of :postId',
+  })
+  @ApiOkResponse({
+    status: HttpStatus.NO_CONTENT,
+  })
   async likePost(
     @CurrentUser() user: AuthUser,
     @Param('postId', ObjectIdPipe) postId: string,
@@ -111,9 +160,14 @@ export class PostsController {
   }
 
   @Delete('post/:postId/like')
-  @UseGuards(AuthGuard)
-  @ApiBearerAuth()
+  @Auth()
   @HttpCode(204)
+  @ApiOperation({
+    summary: 'Removes a like to a post with the id of :postId',
+  })
+  @ApiOkResponse({
+    status: HttpStatus.NO_CONTENT,
+  })
   async unlikePost(
     @CurrentUser() user: AuthUser,
     @Param('postId', ObjectIdPipe) postId: string,
@@ -125,12 +179,20 @@ export class PostsController {
   }
 
   @Post('post/:postId/comment')
-  @UseGuards(AuthGuard)
-  @ApiBearerAuth()
+  @Auth()
+  @ApiOperation({
+    summary:
+      'Adds a comment with the given content to a post with the id of :postId',
+  })
+  @ApiOkResponse({
+    status: HttpStatus.OK,
+    description: 'The created comment',
+    type: Comment,
+  })
   async createComment(
     @CurrentUser() user: AuthUser,
     @Param('postId', ObjectIdPipe) postId: string,
-    @Body() body: any,
+    @Body() body: ContentDto,
   ) {
     const comment = await this.postService.createComment(
       postId,
@@ -142,9 +204,14 @@ export class PostsController {
   }
 
   @Delete('post/:postId/comment/:commentId')
-  @UseGuards(AuthGuard)
-  @ApiBearerAuth()
+  @Auth()
   @HttpCode(204)
+  @ApiOperation({
+    summary: 'Removes a comment from the post with the id of :postId',
+  })
+  @ApiOkResponse({
+    status: HttpStatus.NO_CONTENT,
+  })
   async deleteComment(
     @CurrentUser() user: AuthUser,
     @Param('postId', ObjectIdPipe) postId: string,
