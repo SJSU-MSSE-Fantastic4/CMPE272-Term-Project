@@ -1,16 +1,32 @@
 // src/followers/followers.service.ts
 
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  Logger,
+  UnauthorizedException,
+  UseInterceptors,
+} from '@nestjs/common';
 import { BaseClient, Issuer, TokenSet } from 'openid-client';
 import { ConfigService } from '@nestjs/config';
+import {
+  CACHE_MANAGER,
+  CacheInterceptor,
+  CacheKey,
+  CacheTTL,
+} from '@nestjs/cache-manager';
 
 @Injectable()
+@UseInterceptors(CacheInterceptor)
 export class AuthService {
   private client: BaseClient;
   private AUTH_SERVER_URL = this.configService.get<string>('auth.serverUrl');
   private AUTH_CLIENT_ID = this.configService.get<string>('auth.clientId');
 
-  constructor(private configService: ConfigService) {
+  constructor(
+    @Inject(CACHE_MANAGER) private cacheManager,
+    private configService: ConfigService,
+  ) {
     this.setupClient();
   }
 
@@ -24,7 +40,16 @@ export class AuthService {
 
   async validateToken(token: string) {
     try {
+      const cacheKey = `validateToken:${token}`;
+      const cachedResult = await this.cacheManager.get(cacheKey);
+      if (cachedResult) {
+        Logger.log('Returning cached result');
+        return cachedResult;
+      }
+
+      Logger.log('Validating token');
       const userinfo = await this.client.userinfo(token); // This validates the token
+      await this.cacheManager.set(cacheKey, userinfo, { ttl: 300 });
       return userinfo;
     } catch (error) {
       throw new UnauthorizedException();

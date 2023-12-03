@@ -81,6 +81,22 @@ export class PostsController {
     return posts;
   }
 
+  @Get(':userId/posts')
+  @ApiOperation({
+    summary: 'Gets a list of post created by the user with userId',
+  })
+  @ApiOkResponse({
+    status: HttpStatus.OK,
+    description: 'A list of posts created by user with userId',
+    type: [UnpopulatedPost],
+  })
+  async getPostsByUser(@Param('userId') userId: string) {
+    const posts = await this.postService.getUsersPosts(userId);
+    if (!posts)
+      throw new NotFoundException(`No posts for User with ID ${userId} found`);
+    return posts;
+  }
+
   @Post('me/post')
   @Auth()
   @ApiOperation({
@@ -138,6 +154,28 @@ export class PostsController {
       throw new NotFoundException(`Post with ID ${postId} not found`);
 
     return result;
+  }
+
+  @Get('post/:postId/like')
+  @Auth()
+  @HttpCode(204)
+  @ApiOperation({
+    summary: 'Checks is the authenticated user has liked the post with :postId',
+  })
+  @ApiOkResponse({
+    status: HttpStatus.NO_CONTENT,
+  })
+  async userLikesPost(
+    @CurrentUser() user: AuthUser,
+    @Param('postId', ObjectIdPipe) postId: string,
+  ) {
+    const like = await this.postService.findLikeByUser(postId, user.sub);
+    if (!like)
+      throw new NotFoundException(
+        `No Like found for user ${user.sub} on post ${postId}`,
+      );
+    console.log(like);
+    return like;
   }
 
   @Post('post/:postId/like')

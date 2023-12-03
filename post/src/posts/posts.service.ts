@@ -147,6 +147,14 @@ export class PostsService {
     }
   }
 
+  async findLikeByUser(postId: string, userId: string) {
+    let like = await this.likeModel.findOne({
+      likerId: userId,
+      postId: postId,
+    });
+    return like;
+  }
+
   async likePost(postId: string, likerId: string) {
     const session = await startSession();
     session.startTransaction();
