@@ -174,7 +174,6 @@ export class PostsController {
       throw new NotFoundException(
         `No Like found for user ${user.sub} on post ${postId}`,
       );
-    console.log(like);
     return like;
   }
 
@@ -193,7 +192,6 @@ export class PostsController {
   ) {
     const like = await this.postService.likePost(postId, user.sub);
     if (!like) throw new NotFoundException(`Post with ID ${postId} not found`);
-    console.log(like);
     return like;
   }
 
@@ -212,7 +210,6 @@ export class PostsController {
   ) {
     const like = await this.postService.unlikePost(postId, user.sub);
     if (!like) throw new NotFoundException(`Post with ID ${postId} not found`);
-    console.log(like);
     return like;
   }
 
@@ -237,7 +234,6 @@ export class PostsController {
       user.sub,
       body.content,
     );
-    console.log(comment);
     return comment;
   }
 

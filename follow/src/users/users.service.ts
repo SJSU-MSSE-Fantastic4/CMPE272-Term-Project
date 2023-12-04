@@ -78,7 +78,7 @@ export class UsersService {
         tx.run<User>(
           `
                 MATCH (user:User)
-                WHERE user.nickname CONTAINS $searchTerm OR user.email CONTAINS $searchTerm
+                WHERE user.nickname CONTAINS $searchTerm OR user.email CONTAINS $searchTerm OR user.name CONTAINS $searchTerm
                 RETURN user
                 LIMIT 10
                 `,
