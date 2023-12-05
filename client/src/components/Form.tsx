@@ -113,12 +113,18 @@ const Form: React.FC<FormProps> = ({
                         </div>
                     </div>
                 </div>
-                {posts.map((post) => (
-                    <PostItem key={post._id} post={post} />
-                ))}
-                {comments.map((comment) => (
-                    <CommentItem key={comment._id} comment={comment} />
-                ))}
+                {posts
+                    .slice(0)
+                    .reverse()
+                    .map((post) => (
+                        <PostItem key={post._id} post={post} />
+                    ))}
+                {comments
+                    .slice(0)
+                    .reverse()
+                    .map((comment) => (
+                        <CommentItem key={comment._id} comment={comment} />
+                    ))}
             </div>
         )
     );

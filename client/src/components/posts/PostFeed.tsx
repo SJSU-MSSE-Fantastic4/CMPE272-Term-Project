@@ -1,5 +1,4 @@
 import PostItem from "./PostItem";
-import { ClipLoader } from "react-spinners";
 import { fetchFeed } from "@/lib/feed";
 
 interface PostFeedProps {
@@ -20,9 +19,12 @@ const PostFeed = async ({ userId }: PostFeedProps) => {
 
     return (
         <>
-            {posts.map((postWithAuthor) => (
-                <PostItem key={postWithAuthor._id} post={postWithAuthor} />
-            ))}
+            {posts
+                .slice(0)
+                .reverse()
+                .map((postWithAuthor) => (
+                    <PostItem key={postWithAuthor._id} post={postWithAuthor} />
+                ))}
         </>
     );
 };

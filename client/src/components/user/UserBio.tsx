@@ -55,9 +55,11 @@ const UserBio = ({ user, currentUserId }: UserBioProps) => {
             <div className="mt-8 px-4">
                 <div className="flex flex-col">
                     <p className="text-white text-2xl font-semibold">
-                        {user.nickname}
+                        {user.name}
                     </p>
-                    <p className="text-md text-neutral-500">@{user?.name}</p>
+                    <p className="text-md text-neutral-500">
+                        @{user?.nickname}
+                    </p>
                 </div>
                 <div className="flex flex-col mt-4">
                     <div

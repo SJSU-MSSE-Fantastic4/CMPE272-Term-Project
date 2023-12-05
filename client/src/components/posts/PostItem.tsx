@@ -8,6 +8,8 @@ import { useRouter } from "next/navigation";
 import useUser from "@/hooks/useUser";
 import { isPopulatedPost } from "@/lib/post";
 import Button from "@/components/Button";
+import { useState } from "react";
+import { set } from "date-fns";
 
 interface PostItemProps {
     post: PopulatedPost | UnpopulatedPost;
@@ -15,6 +17,9 @@ interface PostItemProps {
 }
 
 const PostItem = ({ post, postedByCurrenyUser = false }: PostItemProps) => {
+    const [showTranslation, setShowTranslation] = useState(false);
+    const [translatedContent, setTranslatedContent] = useState(undefined);
+
     const router = useRouter();
     const author = useUser(post.authorId);
 
@@ -28,6 +33,44 @@ const PostItem = ({ post, postedByCurrenyUser = false }: PostItemProps) => {
     const { likes, likePost, unlikePost } = useLikes(post);
 
     const LikeIcon = likes.likedByUser ? AiFillHeart : AiOutlineHeart;
+
+    const handleTranslateClick = async (e: any) => {
+        e.stopPropagation();
+
+        // If we are showing the translation, hide it
+        if (showTranslation) {
+            setShowTranslation(false);
+            return;
+        }
+
+        // If we have already translated the post, show it
+        if (translatedContent) {
+            setShowTranslation(true);
+            return;
+        }
+
+        // Otherwise, translate the post
+        try {
+            // Call your translation API here
+            const translationRes = await fetch("/api/gpt/translate", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    prompt: post.content,
+                }),
+            });
+
+            let body = await translationRes.json();
+
+            setTranslatedContent(body.message.content);
+            setShowTranslation(true);
+        } catch (error) {
+            console.error("Error fetching translation:", error);
+            // Handle translation error
+        }
+    };
 
     return (
         author && (
@@ -82,7 +125,7 @@ const PostItem = ({ post, postedByCurrenyUser = false }: PostItemProps) => {
                             </span>
                         </div>
                         <div className="text-white mt-1 break-all">
-                            {post.content}
+                            {showTranslation ? translatedContent : post.content}
                         </div>
                         <div>
                             <div className="flex flex-row items-center mt-3 gap-10">
@@ -125,9 +168,27 @@ const PostItem = ({ post, postedByCurrenyUser = false }: PostItemProps) => {
                                     />
                                     <p>{likes.count}</p>
                                 </div>
+                                <div
+                                    className="
+              flex 
+              flex-row 
+              items-center 
+              hover : undeline
+              text-sm
+              text-gray-300
+              hover:underline
+              gap-1"
+                                >
+                                    <p onClick={(e) => handleTranslateClick(e)}>
+                                        {showTranslation
+                                            ? "See Original"
+                                            : "See Translation"}
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     </div>
+
                     <div>
                         {postedByCurrenyUser ? (
                             <Button
