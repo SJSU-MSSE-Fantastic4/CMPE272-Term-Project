@@ -4,15 +4,19 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@auth0/nextjs-auth0";
 
 export const POST = withApiAuthRequired(async function postHandler(
-    request: NextRequest,
-    context: { params: { userId: string } }
+    request: NextRequest
 ) {
     let api_url = process.env.API_BASE_URL || "http://localhost:80";
 
     // res is not actually NextApiResponse. But auth0/nextjs-auth0
     // doesnt work with with the new app directory structure
     const { accessToken } = await getAccessToken();
-    const { userId } = context.params;
+
+    // Parse the URL to get path parameters
+    const pathname = request.nextUrl.pathname;
+    const pathSegments = pathname.split("/");
+    const userId = pathSegments[pathSegments.length - 2];
+
     if (accessToken) {
         return await fetch(api_url + `/follow-service/me/follow/${userId}`, {
             method: "POST",
@@ -26,14 +30,18 @@ export const POST = withApiAuthRequired(async function postHandler(
 });
 
 export const DELETE = withApiAuthRequired(async function deleteHandler(
-    request: NextRequest,
-    context: { params: { userId: string } }
+    request: NextRequest
 ) {
     let api_url = process.env.API_BASE_URL || "http://localhost:80";
     // res is not actually NextApiResponse. But auth0/nextjs-auth0
     // doesnt work with with the new app directory structure
     const { accessToken } = await getAccessToken();
-    const { userId } = context.params;
+
+    // Parse the URL to get path parameters
+    const pathname = request.nextUrl.pathname;
+    const pathSegments = pathname.split("/");
+    const userId = pathSegments[pathSegments.length - 2];
+
     if (accessToken) {
         return await fetch(api_url + `/follow-service/me/follow/${userId}`, {
             method: "DELETE",
@@ -47,8 +55,7 @@ export const DELETE = withApiAuthRequired(async function deleteHandler(
 });
 
 export const GET = withApiAuthRequired(async function getHandler(
-    request: NextRequest,
-    context: { params: { userId: string } }
+    request: NextRequest
 ) {
     let api_url = process.env.API_BASE_URL || "http://localhost:80";
 
@@ -56,7 +63,12 @@ export const GET = withApiAuthRequired(async function getHandler(
     // res is not actually NextApiResponse. But auth0/nextjs-auth0
     // doesnt work with with the new app directory structure
     const { accessToken } = await getAccessToken();
-    const { userId } = context.params;
+
+    // Parse the URL to get path parameters
+    const pathname = request.nextUrl.pathname;
+    const pathSegments = pathname.split("/");
+    const userId = pathSegments[pathSegments.length - 2];
+
     if (accessToken && session && session.user) {
         const { user } = session;
         const [followingRes, followersRes] = await Promise.all([

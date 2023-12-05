@@ -64,7 +64,7 @@ const Form: React.FC<FormProps> = ({
         } finally {
             setIsLoading(false);
         }
-    }, [body, isComment, postId]);
+    }, [body, isComment, postId, comments, posts]);
 
     return (
         user && (

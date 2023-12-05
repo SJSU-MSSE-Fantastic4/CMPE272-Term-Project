@@ -23,7 +23,7 @@ const useUserSearch = (searchQuery = "") => {
         };
 
         fetchUser();
-    }, []);
+    }, [searchQuery]);
 
     return users;
 };

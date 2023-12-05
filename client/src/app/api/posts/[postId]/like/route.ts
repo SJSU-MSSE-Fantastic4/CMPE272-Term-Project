@@ -1,22 +1,21 @@
-import type { NextApiHandler, NextApiRequest, NextApiResponse } from "next";
-import {
-    AppRouteHandlerFn,
-    getAccessToken,
-    withApiAuthRequired,
-} from "@auth0/nextjs-auth0";
+import { getAccessToken, withApiAuthRequired } from "@auth0/nextjs-auth0";
 import { NextRequest, NextResponse } from "next/server";
-import { likePost, unlikePost, userLikesPost } from "@/lib/post";
+import { userLikesPost } from "@/lib/post";
 
 export const POST = withApiAuthRequired(async function postHandler(
-    request: NextRequest,
-    context: { params: { postId: string } }
+    request: NextRequest
 ) {
     let api_url = process.env.API_BASE_URL || "http://localhost:80";
 
     // res is not actually NextApiResponse. But auth0/nextjs-auth0
     // doesnt work with with the new app directory structure
     const { accessToken } = await getAccessToken();
-    const { postId } = context.params;
+
+    // Parse the URL to get path parameters
+    const pathname = request.nextUrl.pathname;
+    const pathSegments = pathname.split("/");
+    const postId = pathSegments[pathSegments.length - 2];
+
     if (accessToken) {
         return await fetch(api_url + `/post-service/post/${postId}/like`, {
             method: "POST",
@@ -30,16 +29,19 @@ export const POST = withApiAuthRequired(async function postHandler(
 });
 
 export const DELETE = withApiAuthRequired(async function deleteHandler(
-    request: NextRequest,
-    context: { params: { postId: string } }
+    request: NextRequest
 ) {
     let api_url = process.env.API_BASE_URL || "http://localhost:80";
 
     // res is not actually NextApiResponse. But auth0/nextjs-auth0
     // doesnt work with with the new app directory structure
     const { accessToken } = await getAccessToken();
-    let postUnliked = false;
-    const { postId } = context.params;
+
+    // Parse the URL to get path parameters
+    const pathname = request.nextUrl.pathname;
+    const pathSegments = pathname.split("/");
+    const postId = pathSegments[pathSegments.length - 2];
+
     if (accessToken) {
         return await fetch(api_url + `/post-service/post/${postId}/like`, {
             method: "DELETE",
@@ -53,14 +55,18 @@ export const DELETE = withApiAuthRequired(async function deleteHandler(
 });
 
 export const GET = withApiAuthRequired(async function getHandler(
-    request: NextRequest,
-    context: { params: { postId: string } }
+    request: NextRequest
 ) {
     // res is not actually NextApiResponse. But auth0/nextjs-auth0
     // doesnt work with with the new app directory structure
     const { accessToken } = await getAccessToken();
     let postIsLiked = false;
-    const { postId } = context.params;
+
+    // Parse the URL to get path parameters
+    const pathname = request.nextUrl.pathname;
+    const pathSegments = pathname.split("/");
+    const postId = pathSegments[pathSegments.length - 2];
+
     if (accessToken) {
         postIsLiked = await userLikesPost(postId, accessToken);
     } else {

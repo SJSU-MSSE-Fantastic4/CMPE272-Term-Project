@@ -19,7 +19,7 @@ const useUser = (userId: string) => {
         };
 
         fetchUser();
-    }, []);
+    }, [userId]);
 
     return user;
 };

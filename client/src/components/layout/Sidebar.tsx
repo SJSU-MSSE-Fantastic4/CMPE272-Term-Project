@@ -4,7 +4,6 @@ import { FaUser } from "react-icons/fa";
 
 import SidebarItem from "./SidebarItem";
 import SidebarLogo from "./SidebarLogo";
-import SidebarTweetButton from "./SidebarTweetButton";
 import { getSession } from "@auth0/nextjs-auth0";
 
 const Sidebar = async () => {
