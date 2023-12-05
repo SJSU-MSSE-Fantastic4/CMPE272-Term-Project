@@ -15,103 +15,88 @@ services:
             - follow-service
         networks:
             - nginx-network
-    rabbitmq:
-        image: rabbitmq:3.9.7-management-alpine
-        restart: always
-        ports:
-            - "5672:5672"
-            - "15672:15672"
-        environment:
-            RABBITMQ_DEFAULT_USER: "guest"
-            RABBITMQ_DEFAULT_PASS: "guest"
-        networks:
-            - rabbit-network
 
-    post-mongo:
-        image: mongo
-        environment:
-            MONGO_INITDB_ROOT_USERNAME: root
-            MONGO_INITDB_ROOT_PASSWORD: password
-            MONGO_INITDB_DATABASE: postDB
-        networks:
-            - post-network
     post-service:
         image: sjkchang/chatwave-post-service
         restart: always
-        depends_on:
-            - post-mongo
-            - rabbitmq
         environment:
-            MONGO_URL: mongodb://post-mongo
-            MONGO_USERNAME: root
-            MONGO_PASSWORD: password
-            MONGO_DB_NAME: postDB
+            MONGO_URL: ${MONGO_URL}
+            MONGO_USER: ${MONGO_USERNAME}
+            MONGO_PASSWORD: ${MONGO_PASSWORD}
+            MONGO_DB_NAME: ${MONGO_DB_NAME}
 
-            AMQP_URL: amqp://rabbitmq
+            REDIS_HOST: ${REDIS_HOST}
+            REDIS_PORT: ${REDIS_PORT}
+            REDIS_PASS: ${REDIS_PASS}
 
-            AUTH_SERVER_URL: "https://dev-2ttpe83i3lninaj8.us.auth0.com"
-            AUTH_CLIENT_ID: ZRU5C0kWtPWbs41hBPgFecP7I1OyBJ0z
+            AMQP_URL: ${AMQP_URL}
+
+            AUTH_SERVER_URL: ${AUTH0_SERVER_URL}
+            AUTH_CLIENT_ID: ${AUTH0_INTERFACE_CLIENT_ID}
         networks:
-            - rabbit-network
-            - post-network
             - nginx-network
+
+    neo4j:
+        image: neo4j:latest
+        restart: always
+        ports:
+            - "7474:7474"
+            - "7687:7687"
+        environment:
+            NEO4J_AUTH: ${NEO4J_USERNAME}/${NEO4J_PASSWORD}
+        volumes:
+            - neo4j_data:/data
+            - neo4j_logs:/logs
+            - neo4j_import:/var/lib/neo4j/import
+            - neo4j_plugins:/plugins
+        networks:
+            - follow-network
 
     follow-service:
         image: sjkchang/chatwave-follow-service
         restart: always
-        depends_on:
-            - rabbitmq
         environment:
-            AUTH_SERVER_URL: "https://dev-2ttpe83i3lninaj8.us.auth0.com"
-            AUTH_CLIENT_ID: ZRU5C0kWtPWbs41hBPgFecP7I1OyBJ0z
+            AUTH_SERVER_URL: ${AUTH0_SERVER_URL}
+            AUTH_CLIENT_ID: ${AUTH0_INTERFACE_CLIENT_ID}
 
-            NEO4J_URL: neo4j+s://f6b09929.databases.neo4j.io
-            NEO4J_USERNAME: neo4j
-            NEO4J_PASSWORD: ytqJ0tx2OZxsllLlMFDkGMA4_Kib0tp906BXyebCPYc
+            REDIS_HOST: ${REDIS_HOST}
+            REDIS_PORT: ${REDIS_PORT}
+            REDIS_PASS: ${REDIS_PASS}
+
+            NEO4J_URL: bolt://neo4j:7687
+            NEO4J_USERNAME: ${NEO4J_USERNAME}
+            NEO4J_PASSWORD: ${NEO4J_PASSWORD}
         networks:
             - follow-network
             - nginx-network
 
-    feed-mongo:
-        image: mongo
-        environment:
-            MONGO_INITDB_ROOT_USERNAME: root
-            MONGO_INITDB_ROOT_PASSWORD: password
-            MONGO_INITDB_DATABASE: feedDb
-        networks:
-            - feed-network
     feed-service:
         image: sjkchang/chatwave-feed-service
         restart: always
-        depends_on:
-            - rabbitmq
         environment:
-            AUTH_SERVER_URL: "https://dev-2ttpe83i3lninaj8.us.auth0.com"
-            AUTH_CLIENT_ID: ZRU5C0kWtPWbs41hBPgFecP7I1OyBJ0z
+            AUTH_SERVER_URL: ${AUTH0_SERVER_URL}
+            AUTH_CLIENT_ID: ${AUTH0_INTERFACE_CLIENT_ID}
 
-            MONGO_URL: mongodb://feed-mongo
-            MONGO_USERNAME: root
-            MONGO_PASSWORD: password
-            MONGO_DB_NAME: feedDb
+            MONGO_URL: mongodb+srv://sjkchang:parpiL1rTOyZFznQ@microblog.ttp9uez.mongodb.net/?retryWrites=true&w=majority
+            MONGO_USER: sjkchang
+            MONGO_PASSWORD: parpiL1rTOyZFznQ
+            MONGO_DB_NAME: Microblog
 
-            AMQP_URL: amqp://rabbitmq
+            AMQP_URL: ${AMQP_URL}
 
             FOLLOW_SERVICE_URL: http://follow-service:3000
             FOLLOW_SERVICE_BASE_PATH: /
         networks:
-            - feed-network
-            - rabbit-network
-            - follow-network
             - nginx-network
 
+volumes:
+    neo4j_data:
+    neo4j_logs:
+    neo4j_import:
+    neo4j_plugins:
+
 networks:
-    post-network:
-        driver: bridge
     follow-network:
-        driver: bridge
-    feed-network:
-        driver: bridge
-    rabbit-network:
         driver: bridge
     nginx-network:
         driver: bridge
