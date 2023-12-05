@@ -9,12 +9,8 @@ import {
 } from '@nestjs/common';
 import { BaseClient, Issuer, TokenSet } from 'openid-client';
 import { ConfigService } from '@nestjs/config';
-import {
-  CACHE_MANAGER,
-  CacheInterceptor,
-  CacheKey,
-  CacheTTL,
-} from '@nestjs/cache-manager';
+import { CACHE_MANAGER, CacheInterceptor } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
 
 @Injectable()
 @UseInterceptors(CacheInterceptor)
@@ -24,7 +20,7 @@ export class AuthService {
   private AUTH_CLIENT_ID = this.configService.get<string>('auth.clientId');
 
   constructor(
-    @Inject(CACHE_MANAGER) private cacheManager,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private configService: ConfigService,
   ) {
     this.setupClient();
@@ -49,7 +45,7 @@ export class AuthService {
 
       Logger.log('Validating token');
       const userinfo = await this.client.userinfo(token); // This validates the token
-      await this.cacheManager.set(cacheKey, userinfo, { ttl: 300 });
+      await this.cacheManager.set(cacheKey, userinfo, 300);
       return userinfo;
     } catch (error) {
       throw new UnauthorizedException();
