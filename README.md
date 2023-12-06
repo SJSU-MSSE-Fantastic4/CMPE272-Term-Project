@@ -39,3 +39,5 @@
     $ cd deployments/local-infra
     $ docker compose up -d
     ```
+
+4.  When the containers have finished starting, navigate to http://localhost:3000 in your browser.
