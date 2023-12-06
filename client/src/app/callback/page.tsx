@@ -15,13 +15,17 @@ async function Callback(req: NextApiRequest, res: NextApiResponse) {
     let api_url = process.env.API_BASE_URL || "http://localhost:80";
     const { accessToken } = await getAccessToken(req, res);
 
-    // Add auth0 user to follower service
-    fetch(api_url + "/follow-service/me", {
-        method: "PUT",
-        headers: {
-            Authorization: `Bearer ${accessToken}`,
-        },
-    });
+    try {
+        // Add auth0 user to follower service
+        fetch(api_url + "/follow-service/me", {
+            method: "PUT",
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+            },
+        });
+    } catch (e) {
+        console.error(e);
+    }
 
     redirect("/");
 }

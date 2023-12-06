@@ -37,18 +37,33 @@ const Avatar: React.FC<AvatarProps> = ({
         relative
       `}
         >
-            <Image
-                unoptimized
-                onClick={openProfile}
-                fill
-                sizes="100%"
-                style={{
-                    objectFit: "cover",
-                    borderRadius: "100%",
-                }}
-                alt="Avatar"
-                src={user?.picture || "/images/placeholder.png"}
-            />
+            {user?.picture ? (
+                <Image
+                    unoptimized
+                    onClick={openProfile}
+                    fill
+                    sizes="100%"
+                    style={{
+                        objectFit: "cover",
+                        borderRadius: "100%",
+                    }}
+                    alt="Avatar"
+                    src={user.picture}
+                />
+            ) : (
+                <Image
+                    unoptimized
+                    onClick={openProfile}
+                    fill
+                    sizes="100%"
+                    style={{
+                        objectFit: "cover",
+                        borderRadius: "100%",
+                    }}
+                    alt="Avatar"
+                    src="/images/placeholder.png"
+                />
+            )}
         </div>
     );
 };
