@@ -3,7 +3,7 @@ import { Inter } from "next/font/google";
 import { UserProvider } from "@auth0/nextjs-auth0/client";
 import "./globals.css";
 import Layout from "@/components/Layout";
-import { Auth0Provider } from "@auth0/auth0-react";
+import { Analytics } from "@vercel/analytics/react";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -22,6 +22,7 @@ export default function RootLayout({
             <body>
                 <UserProvider>
                     <Layout>{children}</Layout>
+                    <Analytics />
                 </UserProvider>
             </body>
         </html>
