@@ -6,7 +6,7 @@ services:
         image: nginx:latest
         restart: always
         volumes:
-            - ./nginx:/etc/nginx/conf.d
+            - ../../nginx:/etc/nginx/conf.d
         ports:
             - "80:80"
             - "443:443"
@@ -26,6 +26,17 @@ services:
             RABBITMQ_DEFAULT_PASS: "guest"
         networks:
             - rabbit-network
+
+    cache:
+        image: redis:6.2-alpine
+        restart: always
+        ports:
+            - "6379:6379"
+        command: redis-server --save 20 1 --loglevel warning --requirepass password
+        volumes:
+            - cache:/data
+        networks:
+            - redis-network
 
     post-mongo:
         image: mongo
@@ -47,14 +58,19 @@ services:
             MONGO_PASSWORD: password
             MONGO_DB_NAME: postDB
 
+            REDIS_HOST: cache
+            REDIS_PORT: 6379
+            REDIS_PASS: password
+
             AMQP_URL: amqp://rabbitmq
 
-            AUTH_SERVER_URL: "https://dev-2ttpe83i3lninaj8.us.auth0.com"
-            AUTH_CLIENT_ID: ZRU5C0kWtPWbs41hBPgFecP7I1OyBJ0z
+            AUTH_SERVER_URL: ${AUTH0_SERVER_URL}
+            AUTH_CLIENT_ID: ${AUTH0_INTERFACE_CLIENT_ID}
         networks:
             - rabbit-network
             - post-network
             - nginx-network
+            - redis-network
 
     neo4j:
         image: neo4j:latest
@@ -63,12 +79,7 @@ services:
             - "7474:7474"
             - "7687:7687"
         environment:
-            NEO4J_AUTH: neo4j/6SUxKSdYfOQ0yxNP1Ce8leei31yAxwWgpDMSzZ1yL1M
-        volumes:
-            - neo4j_data:/data
-            - neo4j_logs:/logs
-            - neo4j_import:/var/lib/neo4j/import
-            - neo4j_plugins:/plugins
+            NEO4J_AUTH: neo4j/password
         networks:
             - follow-network
 
@@ -78,15 +89,20 @@ services:
         depends_on:
             - rabbitmq
         environment:
-            AUTH_SERVER_URL: "https://dev-2ttpe83i3lninaj8.us.auth0.com"
-            AUTH_CLIENT_ID: ZRU5C0kWtPWbs41hBPgFecP7I1OyBJ0z
+            AUTH_SERVER_URL: ${AUTH0_SERVER_URL}
+            AUTH_CLIENT_ID: ${AUTH0_INTERFACE_CLIENT_ID}
+
+            REDIS_HOST: cache
+            REDIS_PORT: 6379
+            REDIS_PASS: password
 
             NEO4J_URL: bolt://neo4j:7687
             NEO4J_USERNAME: neo4j
-            NEO4J_PASSWORD: 6SUxKSdYfOQ0yxNP1Ce8leei31yAxwWgpDMSzZ1yL1M
+            NEO4J_PASSWORD: password
         networks:
             - follow-network
             - nginx-network
+            - redis-network
 
     feed-mongo:
         image: mongo
@@ -102,8 +118,8 @@ services:
         depends_on:
             - rabbitmq
         environment:
-            AUTH_SERVER_URL: "https://dev-2ttpe83i3lninaj8.us.auth0.com"
-            AUTH_CLIENT_ID: ZRU5C0kWtPWbs41hBPgFecP7I1OyBJ0z
+            AUTH_SERVER_URL: ${AUTH0_SERVER_URL}
+            AUTH_CLIENT_ID: ${AUTH0_INTERFACE_CLIENT_ID}
 
             MONGO_URL: mongodb://feed-mongo
             MONGO_USERNAME: root
@@ -120,11 +136,30 @@ services:
             - follow-network
             - nginx-network
 
+    interface:
+        image: sjkchang/chatwave-interface
+        ports:
+            - "3000:3000"
+        environment:
+            API_BASE_URL: "http://nginx:80"
+
+            AUTH0_SECRET: ${AUTH0_SECRET}
+            AUTH0_BASE_URL: http://localhost:3000
+            AUTH0_ISSUER_BASE_URL: ${AUTH0_SERVER_URL}
+            AUTH0_CLIENT_ID: ${AUTH0_CLIENT_ID}
+            AUTH0_CLIENT_SECRET: ${AUTH0_CLIENT_SECRET}
+
+            AUTH0_MANAGEMENT_CLIENT_ID: ${AUTH0_MANAGEMENT_CLIENT_ID}
+            AUTH0_MANAGEMENT_CLIENT_SECRET: ${AUTH0_MANAGEMENT_CLIENT_SECRET}
+            AUTH0_MANAGEMENT_AUDIENCE: ${AUTH0_MANAGEMENT_AUDIENCE}
+
+            OPENAI_API_KEY: ${OPENAI_API_KEY}
+        networks:
+            - nginx-network
+
 volumes:
-    neo4j_data:
-    neo4j_logs:
-    neo4j_import:
-    neo4j_plugins:
+    cache:
+        driver: local
 
 networks:
     post-network:
@@ -136,4 +171,6 @@ networks:
     rabbit-network:
         driver: bridge
     nginx-network:
+        driver: bridge
+    redis-network:
         driver: bridge

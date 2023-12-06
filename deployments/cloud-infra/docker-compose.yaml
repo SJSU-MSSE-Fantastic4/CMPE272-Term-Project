@@ -106,7 +106,7 @@ services:
             AUTH0_MANAGEMENT_CLIENT_SECRET: ${AUTH0_MANAGEMENT_CLIENT_SECRET}
             AUTH0_MANAGEMENT_AUDIENCE: ${AUTH0_MANAGEMENT_AUDIENCE}
 
-            OPENAI_API_KEY: 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
+            OPENAI_API_KEY: ${OPENAI_API_KEY}
         networks:
             - nginx-network
 
