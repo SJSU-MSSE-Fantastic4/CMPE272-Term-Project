@@ -38,6 +38,7 @@ const Avatar: React.FC<AvatarProps> = ({
       `}
         >
             <Image
+                unoptimized
                 onClick={openProfile}
                 fill
                 sizes="100%"
