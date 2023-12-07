@@ -11,7 +11,7 @@ const UserList = ({ users }: { users: User[] }) => {
                     <Avatar userId={user.userId} />
                     <div className="flex flex-col">
                         <p className="text-white font-semibold text-sm">
-                            {user.nickname}
+                            {user.name}
                         </p>
                         <p className="text-neutral-400 text-sm">
                             @{user.nickname}
