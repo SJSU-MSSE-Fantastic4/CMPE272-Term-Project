@@ -13,7 +13,7 @@ export const DELETE = withApiAuthRequired(async function deleteHandler(
     // Parse the URL to get path parameters
     const pathname = request.nextUrl.pathname;
     const pathSegments = pathname.split("/");
-    const postId = pathSegments[pathSegments.length - 2];
+    const postId = pathSegments[pathSegments.length - 1];
 
     if (accessToken) {
         console.log("Deleteing post: " + postId);
