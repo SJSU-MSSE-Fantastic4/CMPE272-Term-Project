@@ -13,9 +13,15 @@ const PostView = async ({ params }: { params: { postId: string } }) => {
     const fetchPost = async () => {
         try {
             const response = await fetch(
-                api_url + `/post-service/post/${postId}`
+                api_url + `/post-service/post/${postId}`,
+                {
+                    method: "GET",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                }
             );
-            const data: PopulatedPost = await response.json();
+            const data = await response.json();
             return data;
         } catch (error) {
             console.error("Error fetching data:", error);
