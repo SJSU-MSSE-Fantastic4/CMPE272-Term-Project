@@ -41,3 +41,15 @@
     ```
 
 4.  When the containers have finished starting, navigate to http://localhost:3000 in your browser.
+
+Note: You may need to try running it multiple times. Depending on the startup order of the containers, sometimes certain microservices are not accessible through the NGINX gateway, despite being running and accessible, causing a very buggy frontend. If this occurs run
+
+```
+docker compose down
+```
+
+wait for all the services to shut down, then run again
+
+```
+docker compose up -d
+```
