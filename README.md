@@ -1,4 +1,4 @@
-# CMPE272-Term-Project
+# Microblog Application (Twitter Clone)
 
 ## Local Docker Compose Deployment Steps
 
